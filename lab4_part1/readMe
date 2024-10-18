@@ -1,0 +1,10 @@
+Jack Mayer
+LabAssign4
+
+1. Craps: The program prompts the user to place their bet based on the amount of credits
+they currently have. After doing so, it rolls two dice to determine whether the player wins
+or loses.
+
+2. Game Of Life:
+
+Limitations: I did not finish checking the corners of the game board for the Game of Life
