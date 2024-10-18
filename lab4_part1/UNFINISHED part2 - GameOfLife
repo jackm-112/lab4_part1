@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <ncurses.h>
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <unistd.h>
+
+using namespace std;
+
+using VEC = vector<int>;
+using MATRIX = vector<VEC>;
+
+void printBoard(MATRIX board){
+    initscr();
+    noecho();
+    cbreak();
+    
+    for(int i = 0; i < 1; i++){
+        for (int y = 1; y < board[0].size(); y++){
+            for(int x = 1; x < board[y].size(); x++){
+                mvprintw(y, x, "%c", board[y][x]);
+            }
+        }
+        refresh();
+        usleep(500000);
+    }
+    endwin();
+}
+
+void placeCells(MATRIX board){
+    MEVENT event;
+    
+    int yMax, xMax = 0;
+    int yMin = board.size();
+    int xMin = board.size();
+    
+    initscr();
+    noecho();
+    cbreak();
+    keypad(stdscr, TRUE);
+    curs_set(0);
+    mouseinterval(3);
+    mousemask(ALL_MOUSE_EVENTS, NULL);
+    
+    printw("Click to add or remove cells. Press 'Q' to exit.");
+
+    while(1){
+	    int ch = getch();
+		switch(ch){
+		    case KEY_MOUSE:
+			    if(getmouse(&event) == OK)
+			        if(event.bstate & BUTTON1_PRESSED){
+			            if((event.y > 0 && event.y < board.size()) && (event.x > 0 && event.x < board.size())){
+			                board[event.y][(event.x)] == ' '? board[event.y][(event.x)] = 'X' : board[event.y][(event.x)] = ' ';
+			                printBoard(board);
+			                refresh();
+			            }
+				    }
+			    break;
+		    case 'q': 
+		    goto end;
+		}
+	}
+end:
+endwin(); //ends ncurses
+}
+
+void nbCheck(MATRIX board, MATRIX tempBoard){
+    
+    for(int y = 1; y < board[0].size(); y++){
+        for(int x = 1; x < board[y].size(); x++){
+            int nb = 0;
+            
+            //right check
+            if(board[y][x + 1] == 'X') nb += 1;
+            
+            //left check
+            if(board[y][x - 1] == 'X') nb += 1;
+            
+            //down check
+            if(board[y - 1][x] == 'X') nb += 1;
+            
+            //up check
+            if(board[y + 1][x] == 'X') nb += 1;
+            
+            //top right check
+            if(board[y + 1][x + 1] == 'X') nb += 1;
+            
+            //top left check
+            if(board[y + 1][x - 1] == 'X') nb += 1;
+
+            //bottom right check
+            if(board[y - 1][x + 1] == 'X') nb += 1;
+            
+            //bottom left check
+            if(board[y - 1][x - 1] == 'X') nb += 1;
+            
+            //testing for live cells
+            if(board[y][x] == 'X'){
+                
+                if(nb < 2){
+                    tempBoard[y][x] = ' ';
+                }
+                else if(nb == 2 || nb == 3){
+                    tempBoard[y][x] = 'X';
+                }
+                else if(nb > 3){
+                    tempBoard[y][x] = ' ';
+                }
+            }
+            
+            //testing for dead cells
+            else if(board[y][x] == ' '){
+                
+                if(nb == 3){
+                    tempBoard[y][x] = 'X';
+                }
+                else {
+                    tempBoard[x][y] = ' ';
+                }
+            }
+        }
+    }
+    board = tempBoard;
+}
+
+void generate(MATRIX board, MATRIX tempBoard){
+    int gens = 0;
+    cout << "How many generations would you like? ";
+    cin >> gens;
+    cout << endl;
+    clear();
+    
+    for(int i = 0; i <= gens; i++){
+        mvprintw(0, 0, "Generation: %d", i);
+        printBoard(board);
+        nbCheck(board, tempBoard);
+    }
+}
+
+int main(){
+    MATRIX board1(60, VEC(40, ' '));
+    
+    placeCells(board1);
+    printBoard(board1);
+    
+    MATRIX board2 = board1;
+    
+    generate(board1, board2);
+}
